@@ -90,7 +90,7 @@ namespace ApiPeliculas.Controllers
             return CreatedAtRoute("GetCategoria", new { idCategoria = categoria.Id }, categoria);
         }
 
-        [HttpDelete("{idCategoria:int}")]
+        [HttpDelete("{idCategoria:int}", Name = "BorrarCategoria")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -101,11 +101,13 @@ namespace ApiPeliculas.Controllers
                 return NotFound();
             }
             var categoria = _ctRepo.GetCategoria(idCategoria);
+
             if (!_ctRepo.BorrarCategoria(categoria))
             {
                 ModelState.AddModelError("", $"Algo salió mal borrando el registro {categoria.Nombre}");
                 return StatusCode(404, ModelState);
             } 
+
             return NoContent();
         }
 
