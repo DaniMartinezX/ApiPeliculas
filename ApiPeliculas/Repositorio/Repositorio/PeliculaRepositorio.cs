@@ -1,6 +1,7 @@
 ﻿using ApiPeliculas.Data;
 using ApiPeliculas.Modelos;
 using ApiPeliculas.Repositorio.IRepositorio;
+using Microsoft.EntityFrameworkCore;
 
 namespace ApiPeliculas.Repositorio.Repositorio
 {
@@ -16,7 +17,19 @@ namespace ApiPeliculas.Repositorio.Repositorio
         public bool ActualizarPelicula(Pelicula pelicula)
         {
             pelicula.FechaCreacion = DateTime.Now;
-            _bd.Peliculas.Update(pelicula);
+
+            var peliculaExistente = _bd.Peliculas.FirstOrDefault(c => c.Id == pelicula.Id);
+
+            // Arreglo del problema del PUT
+            if (peliculaExistente != null)
+            {
+                _bd.Entry(peliculaExistente).CurrentValues.SetValues(pelicula);
+            }
+            else
+            {
+                _bd.Peliculas.Update(pelicula);
+            }
+
             return Guardar();
         }
 
@@ -28,7 +41,14 @@ namespace ApiPeliculas.Repositorio.Repositorio
 
         public IEnumerable<Pelicula> BuscarPelicula(string nombre)
         {
-            return [.. _bd.Peliculas.Where(p => p.Nombre.ToLower().Trim().Contains(nombre.ToLower().Trim()))];
+            IQueryable<Pelicula> query = _bd.Peliculas;
+
+            if (!string.IsNullOrEmpty(nombre))
+            {
+                query = query.Where(e => e.Nombre.ToLower().Trim().Contains(nombre.ToLower().Trim()) || e.Descripcion.ToLower().Trim().Contains(nombre.ToLower().Trim()));
+            }
+
+            return query.ToList();
         }
 
         public bool CrearPelicula(Pelicula pelicula)
@@ -61,7 +81,7 @@ namespace ApiPeliculas.Repositorio.Repositorio
 
         public ICollection<Pelicula> GetPeliculasEnCategoria(int catId)
         {
-            return [.. _bd.Peliculas.Where(c => c.CategoriaId == catId)];
+            return _bd.Peliculas.Include(ca => ca.Categoria).Where(ca => ca.CategoriaId == catId).ToList();
         }
 
         public bool Guardar()
