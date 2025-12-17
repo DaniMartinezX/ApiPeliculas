@@ -2,8 +2,10 @@
 using ApiPeliculas.Modelos.Dtos;
 using ApiPeliculas.Repositorio.IRepositorio;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using XAct.Security;
 
 namespace ApiPeliculas.Controllers
 {
@@ -22,6 +24,7 @@ namespace ApiPeliculas.Controllers
             _mapper = mapper;
         }
 
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -39,6 +42,7 @@ namespace ApiPeliculas.Controllers
             return Ok(listaPeliculasDto);
         }
 
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         [HttpGet("{idPelicula:int}", Name = "GetPelicula")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -58,6 +62,7 @@ namespace ApiPeliculas.Controllers
             return Ok(itemPeliculaDto);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ProducesResponseType(201, Type = typeof(PeliculaDto))]
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -93,6 +98,7 @@ namespace ApiPeliculas.Controllers
             return CreatedAtRoute("GetPelicula", new { idPelicula = pelicula.Id }, pelicula);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPatch("{idPelicula:int}", Name = "ActualizarPatchPelicula")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -127,6 +133,7 @@ namespace ApiPeliculas.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{idPelicula:int}", Name = "BorrarPelicula")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -148,6 +155,7 @@ namespace ApiPeliculas.Controllers
             return NoContent();
         }
 
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         [HttpGet("BuscarPeliculaByCategoria/{idCategoria:int}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -181,6 +189,7 @@ namespace ApiPeliculas.Controllers
             return Ok(listAuxPeliculas);
         }
 
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         [HttpGet("BuscarPelicula")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

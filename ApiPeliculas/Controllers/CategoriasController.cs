@@ -2,12 +2,15 @@
 using ApiPeliculas.Modelos.Dtos;
 using ApiPeliculas.Repositorio.IRepositorio;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ApiPeliculas.Controllers
 {
+    //[Authorize]
+    //[Authorize(Roles = "Admin")]
     [Route("api/[controller]")]
     [ApiController]
     public class CategoriasController : ControllerBase
@@ -58,6 +61,7 @@ namespace ApiPeliculas.Controllers
             return Ok(itemCategoriaDto);
         }
 
+        [Authorize(Roles = "Admin")] // No se debe que dejen crear categoría cualquiera persona
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -92,6 +96,7 @@ namespace ApiPeliculas.Controllers
             return CreatedAtRoute("GetCategoria", new { idCategoria = categoria.Id }, categoria);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{idCategoria:int}", Name = "BorrarCategoria")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -114,6 +119,7 @@ namespace ApiPeliculas.Controllers
         }
 
 
+        [Authorize(Roles = "Admin")]
         [HttpPatch("{idCategoria:int}", Name = "ActualizarPatchCategoria")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -148,6 +154,8 @@ namespace ApiPeliculas.Controllers
             return NoContent();
         }
 
+        //[AllowAnonymous] EN CASO DE QUE LA CLASE ENTERA ESTÉ PROTEGIDA, PARA PERMITIR EL ACCESO SÓLO A ESTE MÉTODO
+        [Authorize(Roles = "Admin")]
         [HttpPut("{idCategoria:int}", Name = "ActualizarPutCategoria")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
