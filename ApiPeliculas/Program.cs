@@ -26,6 +26,20 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 
+
+// CORS
+// Configura CORS para permitir solicitudes desde el frontend
+// Se pueden habilitar orígenes específicos según sea necesario
+// Aquí se usa el ejèmplo el dominio http://localhost:3223
+// Se usa * para permitir cualquier origen (no recomendado para producción)
+builder.Services.AddCors(p => p.AddPolicy("PoliticaCors", build =>
+{
+    build.WithOrigins("http://localhost:3223")
+           .AllowAnyMethod()
+           .AllowAnyHeader();
+}));
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -37,6 +51,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Soporte para CORS
+app.UseCors("PoliticaCors");
 
 app.UseAuthorization();
 
