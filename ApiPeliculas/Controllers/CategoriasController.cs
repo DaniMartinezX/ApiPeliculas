@@ -11,6 +11,7 @@ namespace ApiPeliculas.Controllers
 {
     //[Authorize]
     //[Authorize(Roles = "Admin")]
+    [ResponseCache(Duration = 60)] // Se cachean las respuestas del controlador por 60 segundos, también se puede aplicar a nivel de método
     [Route("api/[controller]")]
     [ApiController]
     public class CategoriasController : ControllerBase
@@ -43,6 +44,7 @@ namespace ApiPeliculas.Controllers
         }
 
         [HttpGet("{idCategoria:int}", Name = "GetCategoria")]
+        [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)] // No cachear la respuesta de este método
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
