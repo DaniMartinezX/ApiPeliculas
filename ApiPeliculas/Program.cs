@@ -5,7 +5,10 @@ using ApiPeliculas.Repositorio.Repositorio;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
+using System.Security.Claims;
 using System.Text;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,9 +41,11 @@ builder.Services.AddAuthentication
         x.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true, // La clave de la firma del emisor debe ser validado
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)), // Establece la clave de la firma del emisor para validar el token
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)), // Establece la clave de la firma del emisor para validar el token
             ValidateIssuer = false, // Si se necesita validar el emisor del token
-            ValidateAudience = false // No se valida la audiencia del token en este caso, se puede validar si se desea una audiencia específica.
+            ValidateAudience = false, // No se valida la audiencia del token en este caso, se puede validar si se desea una audiencia específica.
+            RoleClaimType = ClaimTypes.Role,
+            NameClaimType = ClaimTypes.Name
         };
     });
 
@@ -49,7 +54,25 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header usando Bearer.\r\n\r\n" +
+                      "Escribe tu token\"\r\n\r\n",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT"
+    });
+
+    options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("Bearer", document)] = new List<string>()
+    });
+});
 
 
 
