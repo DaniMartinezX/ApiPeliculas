@@ -2,6 +2,7 @@ using ApiPeliculas.Data;
 using ApiPeliculas.PeliculasMappers;
 using ApiPeliculas.Repositorio.IRepositorio;
 using ApiPeliculas.Repositorio.Repositorio;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -28,7 +29,26 @@ builder.Services.AddScoped<IUsuarioRepositorio, UsuarioRepositorio>();
 
 var key = builder.Configuration.GetValue<string>("ApiSettings:ClaveSecreta");
 
-//AutoMapper
+// Soporte para versionamiento (paquetes necesarios: Microsoft.Versioning.Mvc.Versioning y ApiExplorer)
+var apiVersioningBuilder = builder.Services.AddApiVersioning(opciones =>
+{
+    opciones.AssumeDefaultVersionWhenUnspecified = true; // Si no se especifica la versión, se usa la versión por defecto
+    opciones.DefaultApiVersion = new ApiVersion(1, 0); // Versión por defecto
+    opciones.ReportApiVersions = true; // Reporta las versiones disponibles en los encabezados de respuesta
+    opciones.ApiVersionReader = ApiVersionReader.Combine(
+        new QueryStringApiVersionReader("api-version") // Leer la versión desde la cadena de consulta
+        //new HeaderApiVersionReader("X-Version"), // Leer la versión desde el encabezado
+        //new MediaTypeApiVersionReader("ver") // Leer la versión desde el tipo de medio
+    );
+});
+
+apiVersioningBuilder.AddApiExplorer(opciones =>
+    {
+        opciones.GroupNameFormat = "'v'VVV"; // Formato del nombre del grupo de versiones
+        //opciones.SubstituteApiVersionInUrl = true; // Sustituye la versión en la URL)
+    });
+
+//AutoMapper (paq
 builder.Services.AddAutoMapper(typeof(PeliculaMapper).Assembly);
 
 // Aquí se configura la Autenticación
