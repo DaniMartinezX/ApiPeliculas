@@ -11,7 +11,7 @@ namespace ApiPeliculas.Controllers
 {
     //[Authorize]
     //[Authorize(Roles = "Admin")]
-    [ResponseCache(Duration = 60)] // Se cachean las respuestas del controlador por 60 segundos, también se puede aplicar a nivel de método
+    //[ResponseCache(Duration = 60)] // Se cachean las respuestas del controlador por 60 segundos, también se puede aplicar a nivel de método
     [Route("api/[controller]")]
     [ApiController]
     public class CategoriasController : ControllerBase
@@ -26,6 +26,7 @@ namespace ApiPeliculas.Controllers
         }
 
         [HttpGet]
+        [ResponseCache(CacheProfileName = "Default30")] // Se puede usar un perfil de cacheo definido en Program.cs
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         //[EnableCors("PoliticaCors")] // Aplica la política CORS a este método en específico, también puede se a nivel de controlador

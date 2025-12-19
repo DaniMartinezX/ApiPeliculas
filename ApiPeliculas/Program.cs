@@ -3,6 +3,7 @@ using ApiPeliculas.PeliculasMappers;
 using ApiPeliculas.Repositorio.IRepositorio;
 using ApiPeliculas.Repositorio.Repositorio;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -52,6 +53,23 @@ builder.Services.AddAuthentication
             NameClaimType = ClaimTypes.Name
         };
     });
+
+
+// Beneficios del CACHÉ GLOBAL:
+// - Centraliza la configuración de caché
+// - Facilita el mantenimiento del código
+// - Mejora la legibilidad del código
+// - Permite reutilizar perfiles de caché en múltiples controladores o acciones
+// - Reduce la duplicación de código
+// - Facilita la aplicación de políticas de caché consistentes en toda la aplicación
+builder.Services.AddControllers(opcion =>
+{
+    // Caché profile. Un caché global y así no tener que ponerlo en todas partes
+    opcion.CacheProfiles.Add("Default30", new CacheProfile()
+    {
+        Duration = 30
+    });
+});
 
 
 builder.Services.AddControllers();

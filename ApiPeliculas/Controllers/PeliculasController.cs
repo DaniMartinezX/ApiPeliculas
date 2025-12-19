@@ -26,6 +26,7 @@ namespace ApiPeliculas.Controllers
 
         [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         [HttpGet]
+        [ResponseCache(CacheProfileName = "Default30")] // Se puede usar un perfil de cacheo definido en Program.cs
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public IActionResult GetPeliculas()
