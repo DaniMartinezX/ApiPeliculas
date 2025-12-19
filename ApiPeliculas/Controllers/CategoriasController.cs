@@ -1,6 +1,7 @@
 ﻿using ApiPeliculas.Modelos;
 using ApiPeliculas.Modelos.Dtos;
 using ApiPeliculas.Repositorio.IRepositorio;
+using Asp.Versioning;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -12,8 +13,10 @@ namespace ApiPeliculas.Controllers
     //[Authorize]
     //[Authorize(Roles = "Admin")]
     //[ResponseCache(Duration = 60)] // Se cachean las respuestas del controlador por 60 segundos, también se puede aplicar a nivel de método
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
+    [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     public class CategoriasController : ControllerBase
     {
         private readonly ICategoriaRepositorio _ctRepo;
@@ -26,6 +29,7 @@ namespace ApiPeliculas.Controllers
         }
 
         [HttpGet]
+        [MapToApiVersion("1.0")]
         [ResponseCache(CacheProfileName = "Default30")] // Se puede usar un perfil de cacheo definido en Program.cs
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -42,6 +46,12 @@ namespace ApiPeliculas.Controllers
             }
 
             return Ok(listaCategoriasDto);
+        }
+
+        [HttpGet]
+        [MapToApiVersion("2.0")]
+        public IEnumerable<string> Get() { 
+            return new string[] { "Categoría V2 - 1", "Categoría V2 - 2" };
         }
 
         [HttpGet("{idCategoria:int}", Name = "GetCategoria")]

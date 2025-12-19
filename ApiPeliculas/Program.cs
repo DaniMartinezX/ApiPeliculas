@@ -35,17 +35,17 @@ var apiVersioningBuilder = builder.Services.AddApiVersioning(opciones =>
     opciones.AssumeDefaultVersionWhenUnspecified = true; // Si no se especifica la versión, se usa la versión por defecto
     opciones.DefaultApiVersion = new ApiVersion(1, 0); // Versión por defecto
     opciones.ReportApiVersions = true; // Reporta las versiones disponibles en los encabezados de respuesta
-    opciones.ApiVersionReader = ApiVersionReader.Combine(
-        new QueryStringApiVersionReader("api-version") // Leer la versión desde la cadena de consulta
-        //new HeaderApiVersionReader("X-Version"), // Leer la versión desde el encabezado
-        //new MediaTypeApiVersionReader("ver") // Leer la versión desde el tipo de medio
-    );
+    //opciones.ApiVersionReader = ApiVersionReader.Combine(
+    //    new QueryStringApiVersionReader("api-version") // Leer la versión desde la cadena de consulta
+    //    //new HeaderApiVersionReader("X-Version"), // Leer la versión desde el encabezado
+    //    //new MediaTypeApiVersionReader("ver") // Leer la versión desde el tipo de medio
+    //);
 });
 
 apiVersioningBuilder.AddApiExplorer(opciones =>
     {
         opciones.GroupNameFormat = "'v'VVV"; // Formato del nombre del grupo de versiones
-        //opciones.SubstituteApiVersionInUrl = true; // Sustituye la versión en la URL)
+        opciones.SubstituteApiVersionInUrl = true; // Sustituye la versión en la URL)
     });
 
 //AutoMapper (paq
@@ -114,6 +114,42 @@ builder.Services.AddSwaggerGen(options =>
     {
         [new OpenApiSecuritySchemeReference("Bearer", document)] = new List<string>()
     });
+
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "v1.0",
+        Title = "PeliculasApi",
+        Description = "Api de Películas versión 1",
+        TermsOfService = new Uri("https://www.linkedin.com/in/danielmartinezcarreira/"),
+        Contact = new OpenApiContact
+        {
+            Name = "Daniel",
+            Url = new Uri("https://www.linkedin.com/in/danielmartinezcarreira/")
+        },
+        License = new OpenApiLicense
+        {
+            Name = "Licencia Personal",
+            Url = new Uri("https://www.linkedin.com/in/danielmartinezcarreira/")
+        }
+    });
+
+    options.SwaggerDoc("v2", new OpenApiInfo
+    {
+        Version = "v2.0",
+        Title = "PeliculasApi",
+        Description = "Api de Películas versión 2",
+        TermsOfService = new Uri("https://www.linkedin.com/in/danielmartinezcarreira/"),
+        Contact = new OpenApiContact
+        {
+            Name = "Daniel",
+            Url = new Uri("https://www.linkedin.com/in/danielmartinezcarreira/")
+        },
+        License = new OpenApiLicense
+        {
+            Name = "Licencia Personal",
+            Url = new Uri("https://www.linkedin.com/in/danielmartinezcarreira/")
+        }
+    });
 });
 
 
@@ -138,7 +174,11 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI( opciones =>
+    {
+        opciones.SwaggerEndpoint("/swagger/v1/swagger.json", "ApiPeliculasV1");
+        opciones.SwaggerEndpoint("/swagger/v2/swagger.json", "ApiPeliculasV2");
+    });
 }
 
 app.UseHttpsRedirection();
