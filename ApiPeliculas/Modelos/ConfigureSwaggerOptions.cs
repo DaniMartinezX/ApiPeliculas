@@ -23,6 +23,13 @@ namespace ApiPeliculas.Modelos
                     Description = $"Api de Películas versión {desc.GroupName}"
                 });
             }
+
+            options.SwaggerDoc("neutral", new OpenApiInfo
+            {
+                Title = "PeliculasApi",
+                Version = "neutral",
+                Description = "Endpoints neutrales (sin versión)"
+            });
         }
     }
 }

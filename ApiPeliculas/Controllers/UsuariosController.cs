@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
-namespace ApiPeliculas.Controllers.V2
+namespace ApiPeliculas.Controllers
 {
-    [Route("api/v{version:apiVersion}/usuarios")]
+    [Route("api/neutral/usuarios")]
     [ApiController]
-    [ApiVersion("2.0")]
-    public class UsuariosV2Controller : ControllerBase
+    //[ApiVersion("1.0")]
+    [ApiVersionNeutral] // Indica que este controlador es neutral a la versión y puede ser accedido desde cualquier versión
+    public class UsuariosController : ControllerBase
     {
         private readonly IUsuarioRepositorio _usRepo;
         private readonly IMapper _mapper;
@@ -21,7 +22,7 @@ namespace ApiPeliculas.Controllers.V2
         // Instancio la clase creada previamente RespuestaAPI para poder acceder a las propiedades de la misma
         protected RespuestaAPI _respuestaAPI;
 
-        public UsuariosV2Controller(IUsuarioRepositorio usRepo, IMapper mapper)
+        public UsuariosController(IUsuarioRepositorio usRepo, IMapper mapper)
         {
             _usRepo = usRepo;
             _mapper = mapper;
@@ -48,14 +49,14 @@ namespace ApiPeliculas.Controllers.V2
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpGet("{usuarioId:int}", Name = "GetUsuario")]
+        [HttpGet("{usuarioId:int}", Name = "GetUsuarioById")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetUsuario(int usuarioId)
+        public IActionResult GetUsuarioById(int usuarioId)
         {
-            var itemUsuario = _usRepo.GetUsuario(usuarioId);
+            var itemUsuario = _usRepo.GetUsuarioById(usuarioId);
 
             if (itemUsuario == null)
             {

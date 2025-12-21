@@ -6,7 +6,7 @@ namespace ApiPeliculas.Repositorio.IRepositorio
     public interface IUsuarioRepositorio
     {
         ICollection<Usuario> GetUsuarios();
-        Usuario GetUsuario(int usuarioId);
+        Usuario GetUsuarioById(int usuarioId);
         
         // Valida si el usuario ya existe
         bool IsUniqueUser(string usuario);

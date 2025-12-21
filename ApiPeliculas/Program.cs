@@ -121,12 +121,20 @@ builder.Services.AddSwaggerGen(options =>
         if (!apiDesc.TryGetMethodInfo(out var methodInfo))
             return false;
 
-        var versions = methodInfo.DeclaringType?
+        var isNeutral = methodInfo.DeclaringType?
             .GetCustomAttributes(true)
-            .OfType<ApiVersionAttribute>()
-            .SelectMany(attr => attr.Versions);
+            .OfType<ApiVersionNeutralAttribute>()
+            .Any() == true;
 
-        return versions?.Any(v => $"v{v.MajorVersion}" == docName) == true;
+        if (isNeutral)
+        {
+            // neutrales SOLO en el doc "neutral"
+            // y SOLO una vez (la que ApiExplorer asocia a v1)
+            return docName == "neutral" && apiDesc.GroupName == "v1";
+        }
+
+        // versionados: cada doc solo su grupo (v1/v2/...)
+        return apiDesc.GroupName == docName;
     });
 
 });
@@ -160,6 +168,8 @@ if (app.Environment.IsDevelopment())
 
         foreach (var desc in provider.ApiVersionDescriptions)
             options.SwaggerEndpoint($"/swagger/{desc.GroupName}/swagger.json", desc.GroupName);
+
+        options.SwaggerEndpoint($"/swagger/neutral/swagger.json", "Neutral");
     });
 }
 
@@ -173,5 +183,23 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Endpoint para depurar las rutas disponibles en la aplicación
+app.MapGet("/debug/routes", (IEnumerable<EndpointDataSource> sources) =>
+{
+    var routes = sources
+        .SelectMany(s => s.Endpoints)
+        .OfType<RouteEndpoint>()
+        .Select(e => new
+        {
+            Route = e.RoutePattern.RawText,
+            DisplayName = e.DisplayName
+        })
+        .OrderBy(x => x.Route)
+        .ToList();
+
+    return Results.Ok(routes);
+});
+
 
 app.Run();

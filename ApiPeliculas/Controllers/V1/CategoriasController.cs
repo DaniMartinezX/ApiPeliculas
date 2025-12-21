@@ -15,13 +15,16 @@ namespace ApiPeliculas.Controllers.V1
     //[ResponseCache(Duration = 60)] // Se cachean las respuestas del controlador por 60 segundos, también se puede aplicar a nivel de método
     [Route("api/v{version:apiVersion}/categorias")]
     [ApiController]
+    //[ApiVersion("1.0", Deprecated = true)] // Marca esta versión como obsoleta
+    // o
+    //[Obsolete("Esta versión de la API está obsoleta. Por favor, use la versión 2.0 o superior.")]
     [ApiVersion("1.0")]
-    public class CategoriasV1Controller : ControllerBase
+    public class CategoriasController : ControllerBase
     {
         private readonly ICategoriaRepositorio _ctRepo;
         private readonly IMapper _mapper;
 
-        public CategoriasV1Controller(ICategoriaRepositorio ctRepo, IMapper mapper)
+        public CategoriasController(ICategoriaRepositorio ctRepo, IMapper mapper)
         {
             _ctRepo = ctRepo;
             _mapper = mapper;

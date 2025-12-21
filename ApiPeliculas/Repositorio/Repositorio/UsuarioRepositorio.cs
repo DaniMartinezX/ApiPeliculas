@@ -23,7 +23,7 @@ namespace ApiPeliculas.Repositorio.Repositorio
             claveSecreta = config.GetValue<string>("ApiSettings:ClaveSecreta"); // Para recoger la clave secreta de appsettings.json
         }
 
-        public Usuario GetUsuario(int usuarioId)
+        public Usuario GetUsuarioById(int usuarioId)
         {
             return _bd.Usuarios.FirstOrDefault(u => u.Id == usuarioId);
         }
