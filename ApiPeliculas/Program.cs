@@ -1,13 +1,16 @@
 using ApiPeliculas.Data;
+using ApiPeliculas.Modelos;
 using ApiPeliculas.PeliculasMappers;
 using ApiPeliculas.Repositorio.IRepositorio;
 using ApiPeliculas.Repositorio.Repositorio;
 using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Security.Claims;
 using System.Text;
 
@@ -92,66 +95,43 @@ builder.Services.AddControllers(opcion =>
 });
 
 
-builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+//builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
 {
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header usando Bearer.\r\n\r\n" +
-                      "Escribe tu token\"\r\n\r\n",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT"
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "Pega SOLO el token JWT (sin 'Bearer ')."
     });
 
     options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
-        [new OpenApiSecuritySchemeReference("Bearer", document)] = new List<string>()
+        [new OpenApiSecuritySchemeReference("bearer", document)] = new List<string>()
     });
 
-    options.SwaggerDoc("v1", new OpenApiInfo
+    options.DocInclusionPredicate((docName, apiDesc) =>
     {
-        Version = "v1.0",
-        Title = "PeliculasApi",
-        Description = "Api de Películas versión 1",
-        TermsOfService = new Uri("https://www.linkedin.com/in/danielmartinezcarreira/"),
-        Contact = new OpenApiContact
-        {
-            Name = "Daniel",
-            Url = new Uri("https://www.linkedin.com/in/danielmartinezcarreira/")
-        },
-        License = new OpenApiLicense
-        {
-            Name = "Licencia Personal",
-            Url = new Uri("https://www.linkedin.com/in/danielmartinezcarreira/")
-        }
+        if (!apiDesc.TryGetMethodInfo(out var methodInfo))
+            return false;
+
+        var versions = methodInfo.DeclaringType?
+            .GetCustomAttributes(true)
+            .OfType<ApiVersionAttribute>()
+            .SelectMany(attr => attr.Versions);
+
+        return versions?.Any(v => $"v{v.MajorVersion}" == docName) == true;
     });
 
-    options.SwaggerDoc("v2", new OpenApiInfo
-    {
-        Version = "v2.0",
-        Title = "PeliculasApi",
-        Description = "Api de Películas versión 2",
-        TermsOfService = new Uri("https://www.linkedin.com/in/danielmartinezcarreira/"),
-        Contact = new OpenApiContact
-        {
-            Name = "Daniel",
-            Url = new Uri("https://www.linkedin.com/in/danielmartinezcarreira/")
-        },
-        License = new OpenApiLicense
-        {
-            Name = "Licencia Personal",
-            Url = new Uri("https://www.linkedin.com/in/danielmartinezcarreira/")
-        }
-    });
 });
 
+builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
 
 
 // CORS
@@ -172,12 +152,14 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    //app.MapOpenApi();
     app.UseSwagger();
-    app.UseSwaggerUI( opciones =>
+    app.UseSwaggerUI(options =>
     {
-        opciones.SwaggerEndpoint("/swagger/v1/swagger.json", "ApiPeliculasV1");
-        opciones.SwaggerEndpoint("/swagger/v2/swagger.json", "ApiPeliculasV2");
+        var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
+        foreach (var desc in provider.ApiVersionDescriptions)
+            options.SwaggerEndpoint($"/swagger/{desc.GroupName}/swagger.json", desc.GroupName);
     });
 }
 

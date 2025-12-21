@@ -8,18 +8,18 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using XAct.Security;
 
-namespace ApiPeliculas.Controllers
+namespace ApiPeliculas.Controllers.V1
 {
-    [Route("api/v{version:apiVersion}/[controller]")]
+    [Route("api/v{version:apiVersion}/peliculas")]
     [ApiController]
     [ApiVersion("1.0")]
-    public class PeliculasController : ControllerBase
+    public class PeliculasV1Controller : ControllerBase
     {
         private readonly IPeliculaRepositorio _pelRepo;
         private readonly ICategoriaRepositorio _catRepo;
         private readonly IMapper _mapper;
 
-        public PeliculasController(IPeliculaRepositorio pelRepo, ICategoriaRepositorio catRepo, IMapper mapper)
+        public PeliculasV1Controller(IPeliculaRepositorio pelRepo, ICategoriaRepositorio catRepo, IMapper mapper)
         {
             _pelRepo = pelRepo;
             _catRepo = catRepo;

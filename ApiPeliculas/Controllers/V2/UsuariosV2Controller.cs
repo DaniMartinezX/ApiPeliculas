@@ -8,12 +8,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
-namespace ApiPeliculas.Controllers
+namespace ApiPeliculas.Controllers.V2
 {
-    [Route("api/v{version:apiVersion}/[controller]")]
+    [Route("api/v{version:apiVersion}/usuarios")]
     [ApiController]
-    [ApiVersion("1.0")]
-    public class UsuariosController : ControllerBase
+    [ApiVersion("2.0")]
+    public class UsuariosV2Controller : ControllerBase
     {
         private readonly IUsuarioRepositorio _usRepo;
         private readonly IMapper _mapper;
@@ -21,7 +21,7 @@ namespace ApiPeliculas.Controllers
         // Instancio la clase creada previamente RespuestaAPI para poder acceder a las propiedades de la misma
         protected RespuestaAPI _respuestaAPI;
 
-        public UsuariosController(IUsuarioRepositorio usRepo, IMapper mapper)
+        public UsuariosV2Controller(IUsuarioRepositorio usRepo, IMapper mapper)
         {
             _usRepo = usRepo;
             _mapper = mapper;
