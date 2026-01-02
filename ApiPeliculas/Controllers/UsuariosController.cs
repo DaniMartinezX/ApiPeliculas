@@ -49,14 +49,14 @@ namespace ApiPeliculas.Controllers
         }
 
         [Authorize(Roles = "Admin")]
-        [HttpGet("{usuarioId:int}", Name = "GetUsuarioById")]
+        [HttpGet("{usuarioId}", Name = "GetUsuarioById")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetUsuarioById(int usuarioId)
+        public IActionResult GetUsuarioById(string usuarioId)
         {
-            var itemUsuario = _usRepo.GetUsuarioById(usuarioId);
+            var itemUsuario = _usRepo.GetUsuario(usuarioId);
 
             if (itemUsuario == null)
             {
@@ -73,32 +73,27 @@ namespace ApiPeliculas.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> Registro([FromBody] UsuarioRegistroDto usuarioRegistroDto)
+        public async Task<IActionResult> Registro([FromBody] UsuarioRegistroDto dto)
         {
-            bool validarNombreUsuarioUnico = _usRepo.IsUniqueUser(usuarioRegistroDto.NombreUsuario);
-
-            if (!validarNombreUsuarioUnico)
+            if (!_usRepo.IsUniqueUser(dto.NombreUsuario))
             {
-                _respuestaAPI.StatusCode = HttpStatusCode.BadRequest;
-                _respuestaAPI.IsSuccess = false;
-                _respuestaAPI.ErrorMessages.Add("El nombre de usuario ya existe");
-                return BadRequest(_respuestaAPI);
+                return BadRequest(new
+                {
+                    errors = new[] { "El nombre de usuario ya existe" }
+                });
             }
 
-            var usuario = _usRepo.Registro(usuarioRegistroDto);
+            var (usuario, errores) = await _usRepo.Registro(dto);
 
-            if (usuario == null)
+            if (errores != null)
             {
-                _respuestaAPI.StatusCode = HttpStatusCode.BadRequest;
-                _respuestaAPI.IsSuccess = false;
-                _respuestaAPI.ErrorMessages.Add("Error en el registro");
-                return BadRequest(_respuestaAPI);
+                return BadRequest(new
+                {
+                    errors = errores
+                });
             }
 
-            _respuestaAPI.StatusCode = HttpStatusCode.OK;
-            _respuestaAPI.IsSuccess = true;
-            return Ok(_respuestaAPI);
-
+            return CreatedAtAction(nameof(Registro), usuario);
         }
 
         [AllowAnonymous]

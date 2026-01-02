@@ -6,6 +6,7 @@ using ApiPeliculas.Repositorio.Repositorio;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -31,6 +32,10 @@ builder.Services.AddScoped<IPeliculaRepositorio, PeliculaRepositorio>();
 builder.Services.AddScoped<IUsuarioRepositorio, UsuarioRepositorio>();
 
 var key = builder.Configuration.GetValue<string>("ApiSettings:ClaveSecreta");
+
+// Soporte para autenticación con .NET Identity [Microsoft.AspNetCore.Identity], tiene que alinearse la versión con el paquete de EntityFrameworkCore.tools
+builder.Services.AddIdentity<AppUsuario, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>();
 
 // Soporte para versionamiento (paquetes necesarios: Microsoft.Versioning.Mvc.Versioning y ApiExplorer)
 var apiVersioningBuilder = builder.Services.AddApiVersioning(opciones =>

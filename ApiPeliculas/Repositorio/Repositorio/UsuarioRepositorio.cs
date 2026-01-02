@@ -2,13 +2,13 @@
 using ApiPeliculas.Modelos;
 using ApiPeliculas.Modelos.Dtos;
 using ApiPeliculas.Repositorio.IRepositorio;
+using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using XSystem.Security.Cryptography;
 
 namespace ApiPeliculas.Repositorio.Repositorio
 {
@@ -17,25 +17,33 @@ namespace ApiPeliculas.Repositorio.Repositorio
         private readonly ApplicationDbContext _bd;
         private string claveSecreta;
 
-        public UsuarioRepositorio(ApplicationDbContext bd, IConfiguration config)
+        // Variables de Identity
+        private readonly UserManager<AppUsuario> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IMapper _mapper;
+
+        public UsuarioRepositorio(ApplicationDbContext bd, IConfiguration config, UserManager<AppUsuario> userManager, RoleManager<IdentityRole> roleManager, IMapper mapper)
         {
             _bd = bd;
             claveSecreta = config.GetValue<string>("ApiSettings:ClaveSecreta"); // Para recoger la clave secreta de appsettings.json
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _mapper = mapper;
         }
 
-        public Usuario GetUsuarioById(int usuarioId)
+        public AppUsuario GetUsuario(string usuarioId)
         {
             return _bd.Usuarios.FirstOrDefault(u => u.Id == usuarioId);
         }
 
-        public ICollection<Usuario> GetUsuarios()
+        public ICollection<AppUsuario> GetUsuarios()
         {
-            return _bd.Usuarios.OrderBy(u => u.NombreUsuario).ToList();
+            return _bd.Usuarios.OrderBy(u => u.UserName).ToList();
         }
 
         public bool IsUniqueUser(string usuario)
         {
-            var usuarioBd = _bd.Usuarios.FirstOrDefault(u => u.NombreUsuario == usuario);
+            var usuarioBd = _bd.Usuarios.FirstOrDefault(u => u.UserName == usuario);
 
             if (usuarioBd == null)
             {
@@ -48,28 +56,34 @@ namespace ApiPeliculas.Repositorio.Repositorio
         public async Task<UsuarioLoginRespuestaDto> Login(UsuarioLoginDto usuarioLoginDto)
         {
             var usuario = await _bd.Usuarios.FirstOrDefaultAsync(
-                u => u.NombreUsuario.ToLower() == usuarioLoginDto.NombreUsuario.ToLower()
+                u => u.UserName.ToLower() == usuarioLoginDto.NombreUsuario.ToLower()
             );
 
-            if (usuario == null)
+            bool isValid = await _userManager.CheckPasswordAsync(usuario, usuarioLoginDto.Password);
+
+            if (usuario == null || isValid == false)
             {
                 return new UsuarioLoginRespuestaDto { Token = "", Usuario = null };
             }
 
-            var hasher = new PasswordHasher<Usuario>();
-            var result = hasher.VerifyHashedPassword(usuario, usuario.Password, usuarioLoginDto.Password);
 
-            if (result == PasswordVerificationResult.Failed)
-            {
-                return new UsuarioLoginRespuestaDto { Token = "", Usuario = null };
-            }
+            //var hasher = new PasswordHasher<AppUsuario>();
+            //var result = hasher.VerifyHashedPassword(usuario, usuario.Contrasenha, usuarioLoginDto.Password);
 
-            // Si result == SuccessRehashNeeded, podrías re-hashear y guardar (opcional)
-            if (result == PasswordVerificationResult.SuccessRehashNeeded)
-            {
-                usuario.Password = hasher.HashPassword(usuario, usuarioLoginDto.Password);
-                await _bd.SaveChangesAsync();
-            }
+            //if (result == PasswordVerificationResult.Failed)
+            //{
+            //    return new UsuarioLoginRespuestaDto { Token = "", Usuario = null };
+            //}
+
+            //// Si result == SuccessRehashNeeded, podrías re-hashear y guardar (opcional)
+            //if (result == PasswordVerificationResult.SuccessRehashNeeded)
+            //{
+            //    usuario.Contrasenha = hasher.HashPassword(usuario, usuarioLoginDto.Password);
+            //    await _bd.SaveChangesAsync();
+            //}
+
+            // Obtener el rol del usuario
+            var roles = await _userManager.GetRolesAsync(usuario);
 
             // JWT (solo ajusto UTF8 recomendado)
             var manejadoToken = new JwtSecurityTokenHandler();
@@ -79,8 +93,8 @@ namespace ApiPeliculas.Repositorio.Repositorio
             {
                 Subject = new ClaimsIdentity(new Claim[]
                 {
-                    new Claim(ClaimTypes.Name, usuario.NombreUsuario),
-                    new Claim(ClaimTypes.Role, usuario.Role)
+                    new Claim(ClaimTypes.Name, usuario.UserName.ToString()),
+                    new Claim(ClaimTypes.Role, roles.FirstOrDefault())
                 }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(
@@ -94,29 +108,58 @@ namespace ApiPeliculas.Repositorio.Repositorio
             return new UsuarioLoginRespuestaDto
             {
                 Token = manejadoToken.WriteToken(token),
-                Usuario = usuario // ideal: devolver DTO sin Password
+                Usuario = _mapper.Map<UsuarioDatosDto>(usuario), // ideal: devolver DTO sin Password
             };
         }
 
-        public async Task<Usuario> Registro(UsuarioRegistroDto usuarioRegistroDto)
+        public async Task<(UsuarioDatosDto Usuario, List<string> Errores)> Registro(UsuarioRegistroDto usuarioRegistroDto)
         {
-            var hasher = new PasswordHasher<Usuario>();
+            //var hasher = new PasswordHasher<AppUsuario>();
 
-            Usuario usuario = new Usuario()
+            AppUsuario usuario = new AppUsuario()
             {
-                NombreUsuario = usuarioRegistroDto.NombreUsuario,
-                Nombre = usuarioRegistroDto.Nombre,
-                Role = usuarioRegistroDto.Role
+                UserName = usuarioRegistroDto.NombreUsuario,
+                Email = usuarioRegistroDto.NombreUsuario,
+                NormalizedEmail = usuarioRegistroDto.NombreUsuario.ToUpper(),
+                Nombre = usuarioRegistroDto.Nombre
             };
 
+            var result = await _userManager.CreateAsync(usuario, usuarioRegistroDto.Password);
+
+            if (!result.Succeeded)
+            {
+                var errores = result.Errors.Select(e => e.Description).ToList();
+
+                return (null, errores);
+            }
+
+
+            if (!await _roleManager.RoleExistsAsync("Admin"))
+            {
+                await _roleManager.CreateAsync(new IdentityRole("Admin"));
+            }
+
+            if (!await _roleManager.RoleExistsAsync("Registrado"))
+            {
+                await _roleManager.CreateAsync(new IdentityRole("Registrado"));
+            }
+
+
+            await _userManager.AddToRoleAsync(usuario, "Admin");
+
+            var usuarioRetornado = await _bd.Usuarios.FirstAsync(u => u.UserName == usuarioRegistroDto.NombreUsuario);
+
+            return (_mapper.Map<UsuarioDatosDto>(usuarioRetornado), null);
+
+
             // Hash seguro + salt (lo gestiona PasswordHasher)
-            usuario.Password = hasher.HashPassword(usuario, usuarioRegistroDto.Password);
+            //usuario.Contrasenha = hasher.HashPassword(usuario, usuarioRegistroDto.Password);
 
-            _bd.Usuarios.Add(usuario);
-            await _bd.SaveChangesAsync();
+            //_bd.Usuarios.Add(usuario);
+            //await _bd.SaveChangesAsync();
 
-            // OJO: no devuelvas el hash al cliente en un proyecto real (mejor DTO), LO MAPEO EN EL CONTROLADOR
-            return usuario;
+            //// OJO: no devuelvas el hash al cliente en un proyecto real (mejor DTO), LO MAPEO EN EL CONTROLADOR
+            //return usuario;
         }
 
 
