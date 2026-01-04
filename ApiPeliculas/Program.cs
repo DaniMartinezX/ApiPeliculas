@@ -178,6 +178,9 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+//Soporte para archivos estáticos como imágenes
+app.UseStaticFiles();
+
 app.UseHttpsRedirection();
 
 // Soporte para CORS

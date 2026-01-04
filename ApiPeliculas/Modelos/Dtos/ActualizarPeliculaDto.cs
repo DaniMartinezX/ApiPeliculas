@@ -3,16 +3,19 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ApiPeliculas.Modelos.Dtos
 {
-    public class CrearPeliculaDto
+    public class ActualizarPeliculaDto
     {
+        public int Id { get; set; }
         public string Nombre { get; set; }
         public string Descripcion { get; set; }
         public int Duracion { get; set; }
         public string? RutaImagen { get; set; }
-
+        public string? RutaLocalImagen { get; set; }
         public IFormFile Imagen { get; set; }
-        public enum CrearTipoClasificacion { Siete, Trece, Dieciseis, Dieciocho }
-        public CrearTipoClasificacion Clasificacion { get; set; }
+
+        public enum TipoClasificacion { Siete, Trece, Dieciseis, Dieciocho }
+        public TipoClasificacion Clasificacion { get; set; }
+        public DateTime FechaCreacion { get; set; }
 
         // Relación con Categoría
         public int CategoriaId { get; set; }
