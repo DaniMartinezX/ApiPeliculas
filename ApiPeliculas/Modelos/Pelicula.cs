@@ -14,7 +14,7 @@ namespace ApiPeliculas.Modelos
         public string? RutaLocalImagen { get; set; }
         public enum TipoClasificacion { Siete, Trece, Dieciseis, Dieciocho }
         public TipoClasificacion Clasificacion { get; set; }
-        public DateTime FechaCreacion { get; set; }
+        public DateTime? FechaCreacion { get; set; }
 
         // Relación con Categoría
         public int CategoriaId { get; set; }
