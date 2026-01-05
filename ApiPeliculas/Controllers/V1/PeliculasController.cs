@@ -226,30 +226,37 @@ namespace ApiPeliculas.Controllers.V1
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public IActionResult BuscarPeliculaByCategoria(int idCategoria)
         {
-            if (idCategoria <= 0)
+            try
             {
-                return BadRequest();
-            }
+                if (idCategoria <= 0)
+                {
+                    return BadRequest();
+                }
 
-            if (!_catRepo.ExisteCategoria(idCategoria))
+                if (!_catRepo.ExisteCategoria(idCategoria))
+                {
+                    return NotFound();
+                }
+
+                var listaPeliculas = _pelRepo.GetPeliculasEnCategoria(idCategoria);
+
+                if (listaPeliculas == null || !listaPeliculas.Any())
+                {
+                    return NotFound($"No se encontraron películas en la categoría con ID {idCategoria}.");
+                }
+
+                var itemPelicula = listaPeliculas.Select(p => _mapper.Map<PeliculaDto>(p)).ToList();
+                //foreach (var pelicula in listaPeliculas)
+                //{
+                //    itemPelicula.Add(_mapper.Map<PeliculaDto>(pelicula));
+                //}
+
+                return Ok(itemPelicula);
+            }
+            catch (Exception)
             {
-                return NotFound();
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error al recuperar datos de la aplicación");
             }
-
-            var listaPeliculas = _pelRepo.GetPeliculasEnCategoria(idCategoria);
-
-            if (listaPeliculas == null || listaPeliculas.Count == 0)
-            {
-                return NotFound();
-            }
-
-            var listAuxPeliculas = new List<PeliculaDto>();
-            foreach (var pelicula in listaPeliculas)
-            {
-                listAuxPeliculas.Add(_mapper.Map<PeliculaDto>(pelicula));
-            }
-
-            return Ok(listAuxPeliculas);
         }
 
         [Microsoft.AspNetCore.Authorization.AllowAnonymous]
@@ -266,21 +273,16 @@ namespace ApiPeliculas.Controllers.V1
 
                 if (resultado == null || resultado.Count() == 0)
                 {
-                    return NotFound();
+                    return NotFound($"No se encontraron películas con el nombre {nombrePelicula}.");
                 }
 
-                var listaPeliculasDto = new List<PeliculaDto>();
+                var peliculasDto = _mapper.Map<IEnumerable<PeliculaDto>>(resultado);
 
-                foreach (var pelicula in resultado)
-                {
-                    listaPeliculasDto.Add(_mapper.Map<PeliculaDto>(pelicula));
-                }
-
-                return Ok(listaPeliculasDto);
+                return Ok(peliculasDto);
             }
             catch (Exception)
             {
-                return StatusCode(500, "Algo salió mal buscando la película");
+                return StatusCode(StatusCodes.Status500InternalServerError, "Algo salió mal buscando la película");
             }
         }
     }
