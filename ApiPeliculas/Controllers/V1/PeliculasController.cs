@@ -25,6 +25,7 @@ namespace ApiPeliculas.Controllers.V1
             _mapper = mapper;
         }
 
+        // V1
         [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         [HttpGet]
         [ResponseCache(CacheProfileName = "Default30")] // Se puede usar un perfil de cacheo definido en Program.cs
@@ -42,6 +43,46 @@ namespace ApiPeliculas.Controllers.V1
             }
 
             return Ok(listaPeliculasDto);
+        }
+
+        // V2 con paginación
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+        [HttpGet("GetPeliculasPaginadas")]
+        [ResponseCache(CacheProfileName = "Default30")] // Se puede usar un perfil de cacheo definido en Program.cs
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult GetPeliculasPaginadas([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+
+            try
+            {
+                var totalPeliculas = _pelRepo.GetTotalPeliculas();
+
+                var listaPeliculas = _pelRepo.GetPeliculasPaginadas(pageNumber, pageSize);
+
+                if (listaPeliculas == null || !listaPeliculas.Any())
+                {
+                    return NotFound("No se encontraron películas.");
+                }
+
+                var peliculasDto = listaPeliculas.Select(p => _mapper.Map<PeliculaDto>(p)).ToList();
+
+                var response = new
+                {
+                    TotalPages = (int)Math.Ceiling(totalPeliculas / (double)pageSize),
+                    PageSize = pageSize,
+                    PageNumber = pageNumber,
+                    TotalItems = totalPeliculas,
+                    Items = peliculasDto
+                };
+
+                return Ok(response);
+
+            }
+            catch (Exception)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error al recuperar datos de la aplicación");
+            }        
         }
 
         [Microsoft.AspNetCore.Authorization.AllowAnonymous]
