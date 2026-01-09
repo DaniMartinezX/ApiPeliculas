@@ -57,9 +57,9 @@ La API utiliza **JWT** para proteger los endpoints sensibles.
 ### Flujo para probar endpoints protegidos
 1. Registrarse mediante el endpoint de **registro** (endpoints neutrales), asignando el rol **Admin**.
 2. Obtener un token JWT usando el endpoint de **login**.
-3. En Swagger, pulsar **Authorize** e introducir el token con el formato:
+3. En Swagger, pulsar **Authorize** e introducir el token con el formato directo:
 
-`Bearer {token}`
+`{token}`
 
 > ⚠️ Nota: La asignación del rol **Admin** durante el registro está habilitada únicamente con fines demostrativos.
 
